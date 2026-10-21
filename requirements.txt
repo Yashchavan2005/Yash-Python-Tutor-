@@ -1,0 +1,7 @@
+# Project: Yash Python Tutor
+# Virtual Environment: .venv
+# Install using: python -m pip install -r requirements.txt
+
+streamlit
+ollama
+
