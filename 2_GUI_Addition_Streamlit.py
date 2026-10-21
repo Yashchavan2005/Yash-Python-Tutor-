@@ -5,7 +5,7 @@
 # ============================================================
 
 import streamlit as st
-from ollama import chat
+from ollama import Client
 
 
 # ============================================================
@@ -20,24 +20,30 @@ st.set_page_config(
 
 
 # ============================================================
-# Step 2 : Add CSS Styling
+# Step 2 : Connect to Ollama
+# ============================================================
+
+client = Client(
+    host="http://localhost:11434"
+)
+
+
+# ============================================================
+# Step 3 : Add CSS Styling
 # ============================================================
 
 st.markdown("""
 <style>
 
-/* Main Background */
 .stApp {
     background-color: #0f172a;
     color: #ffffff;
 }
 
-/* Main Content */
 .main .block-container {
     padding-top: 2rem;
 }
 
-/* Dashboard Title */
 .title {
     text-align: center;
     color: #a78bfa;
@@ -45,7 +51,6 @@ st.markdown("""
     font-weight: bold;
 }
 
-/* Student Caption */
 .subtitle {
     text-align: center;
     color: #cbd5e1;
@@ -53,17 +58,14 @@ st.markdown("""
     margin-top: 8px;
 }
 
-/* Sidebar Background */
 [data-testid="stSidebar"] {
     background-color: #1e293b;
 }
 
-/* Sidebar Text */
 [data-testid="stSidebar"] * {
     color: #ffffff;
 }
 
-/* Chat Messages */
 [data-testid="stChatMessage"] {
     background-color: #1e293b;
     color: #ffffff;
@@ -72,19 +74,16 @@ st.markdown("""
     border: 1px solid #334155;
 }
 
-/* Chat Input */
 [data-testid="stChatInput"] {
     background-color: #1e293b;
     border: 1px solid #8b5cf6;
     border-radius: 12px;
 }
 
-/* Chat Input Text */
 [data-testid="stChatInput"] textarea {
     color: #ffffff;
 }
 
-/* Buttons */
 div.stButton > button {
     width: 100%;
     border-radius: 10px;
@@ -96,28 +95,20 @@ div.stButton > button {
     transition: 0.3s;
 }
 
-/* Button Hover */
 div.stButton > button:hover {
     background-color: #6d28d9;
     color: #ffffff;
     border: 1px solid #a78bfa;
 }
 
-/* Divider */
 hr {
     border-color: #475569;
 }
 
-/* Information Boxes */
 [data-testid="stAlert"] {
     background-color: #1e293b;
     color: #ffffff;
     border-radius: 10px;
-}
-
-/* Spinner */
-.stSpinner {
-    color: #a78bfa;
 }
 
 </style>
@@ -125,7 +116,7 @@ hr {
 
 
 # ============================================================
-# Step 3 : Display Dashboard Title
+# Step 4 : Display Dashboard Title
 # ============================================================
 
 st.markdown(
@@ -134,7 +125,7 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="subtitle">Student: Yash Chavan</div>',
+    '<div class="subtitle">AI-Powered Python Learning Assistant</div>',
     unsafe_allow_html=True
 )
 
@@ -142,29 +133,23 @@ st.divider()
 
 
 # ============================================================
-# Step 4 : Initialize Chat History
+# Step 5 : Initialize Chat History
 # ============================================================
 
 SYSTEM_MESSAGE = {
     "role": "system",
     "content": (
-        "You are Yash Python Tutor, an expert Python programming teacher. "
-
-        "LANGUAGE RULES: "
-        "If the user asks in English, answer entirely in English. "
-        "If the user asks in Marathi, answer in Marathi. "
-        "Never answer in Hindi. "
-        "Do not translate the answer into another language unless requested. "
-        "If the user mixes English and Marathi, respond mainly in the "
-        "language used by the user. "
-        "Keep Python keywords, code, and technical terms in English "
-        "where appropriate. "
-
-        "TEACHING RULES: "
-        "Explain Python concepts step by step for beginners. "
-        "Provide correct Python code examples whenever useful. "
-        "Explain errors clearly and help users debug their code. "
-        "Keep answers simple, clear, and easy to understand."
+        "You are Yash Python Tutor, an expert Python teacher. "
+        "Teach Python programming to beginners. "
+        "If the user asks in English, respond entirely in English. "
+        "If the user asks in Marathi, respond in Marathi. "
+        "Never respond in Hindi. "
+        "If the user mixes English and Marathi, respond mainly "
+        "in the language used by the user. "
+        "Explain concepts step by step using simple language. "
+        "Provide correct Python code examples when useful. "
+        "Explain errors and help debug code clearly. "
+        "Keep answers relevant to the user's question."
     )
 }
 
@@ -173,7 +158,7 @@ if "messages" not in st.session_state:
 
 
 # ============================================================
-# Step 5 : Create Sidebar
+# Step 6 : Create Sidebar
 # ============================================================
 
 with st.sidebar:
@@ -190,21 +175,24 @@ with st.sidebar:
 
     st.subheader("📚 Python Topics")
 
-    st.markdown("""
-    - Python Basics
-    - Variables and Data Types
-    - Operators
-    - Conditional Statements
-    - Loops
-    - Functions
-    - Lists and Tuples
-    - Dictionaries and Sets
-    - Object-Oriented Programming
-    - Exception Handling
-    - File Handling
-    - NumPy and Pandas
-    - Machine Learning
-    """)
+    topics = [
+        "Python Basics",
+        "Variables and Data Types",
+        "Operators",
+        "Conditional Statements",
+        "Loops",
+        "Functions",
+        "Lists and Tuples",
+        "Dictionaries and Sets",
+        "Object-Oriented Programming",
+        "Exception Handling",
+        "File Handling",
+        "NumPy and Pandas",
+        "Machine Learning"
+    ]
+
+    for topic in topics:
+        st.markdown(f"- {topic}")
 
     st.divider()
 
@@ -218,19 +206,19 @@ with st.sidebar:
 
 
 # ============================================================
-# Step 6 : Display Welcome Message
+# Step 7 : Display Welcome Message
 # ============================================================
 
 if len(st.session_state.messages) == 1:
 
     st.info(
         "👋 Welcome to Yash Python Tutor!\n\n"
-        "Ask your Python programming questions below."
+        "Ask any Python programming question below."
     )
 
 
 # ============================================================
-# Step 7 : Display Chat History
+# Step 8 : Display Chat History
 # ============================================================
 
 for message in st.session_state.messages:
@@ -243,7 +231,7 @@ for message in st.session_state.messages:
 
 
 # ============================================================
-# Step 8 : Accept User Question
+# Step 9 : Accept User Question
 # ============================================================
 
 Question = st.chat_input(
@@ -252,7 +240,7 @@ Question = st.chat_input(
 
 
 # ============================================================
-# Step 9 : Generate AI Response
+# Step 10 : Generate AI Response
 # ============================================================
 
 if Question:
@@ -276,12 +264,16 @@ if Question:
                 "🤖 Yash Python Tutor is thinking..."
             ):
 
-                response = chat(
+                response = client.chat(
                     model="llama3.2:1b",
-                    messages=st.session_state.messages
+                    messages=st.session_state.messages,
+                    options={
+                        "temperature": 0.2,
+                        "num_predict": 300
+                    }
                 )
 
-                answer = response.message.content
+                answer = response.message.content.strip()
 
             st.markdown(answer)
 
@@ -293,11 +285,15 @@ if Question:
 
     except Exception as error:
 
-        st.error(
-            "Could not get an Ollama response. "
-            "Check whether Ollama is running and "
-            "llama3.2:1b is available."
+        st.error("❌ Ollama connection failed!")
+
+        st.code(
+            f"Error Type: {type(error).__name__}\n"
+            f"Error Details: {error}"
         )
 
-        st.caption(f"Error details: {error}")
+        st.info(
+            "Check whether Ollama is running and "
+            "the llama3.2:1b model is installed."
+        )
 
