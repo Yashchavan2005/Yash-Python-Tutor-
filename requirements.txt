@@ -3,5 +3,5 @@
 # Install using: python -m pip install -r requirements.txt
 
 streamlit
-groq
+ollama
 
