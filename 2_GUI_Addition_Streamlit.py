@@ -1,11 +1,11 @@
 # ============================================================
 # Project Name : Yash Python Tutor
 # Author       : Yash Chavan
-# Description  : AI Python Tutor using Ollama and Streamlit
+# Description  : AI Python Tutor using Groq and Streamlit
 # ============================================================
 
 import streamlit as st
-from ollama import chat
+from groq import Groq
 
 
 # ============================================================
@@ -20,7 +20,20 @@ st.set_page_config(
 
 
 # ============================================================
-# Step 2 : Add CSS Styling
+# Step 2 : Configure Groq AI
+# ============================================================
+
+try:
+    client = Groq(
+        api_key=st.secrets["GROQ_API_KEY"]
+    )
+except (KeyError, FileNotFoundError):
+    st.error("Groq API Key not found in Streamlit Secrets.")
+    st.stop()
+
+
+# ============================================================
+# Step 3 : Add CSS Styling
 # ============================================================
 
 st.markdown("""
@@ -125,7 +138,7 @@ hr {
 
 
 # ============================================================
-# Step 3 : Display Dashboard Title
+# Step 4 : Display Dashboard Title
 # ============================================================
 
 st.markdown(
@@ -142,7 +155,7 @@ st.divider()
 
 
 # ============================================================
-# Step 4 : Initialize Chat History
+# Step 5 : Initialize Chat History
 # ============================================================
 
 SYSTEM_MESSAGE = {
@@ -173,7 +186,7 @@ if "messages" not in st.session_state:
 
 
 # ============================================================
-# Step 5 : Create Sidebar
+# Step 6 : Create Sidebar
 # ============================================================
 
 with st.sidebar:
@@ -186,7 +199,7 @@ with st.sidebar:
 
     st.subheader("🤖 AI Model")
 
-    st.info("Ollama: llama3.2:1b")
+    st.info("Groq AI: llama-3.1-8b-instant")
 
     st.subheader("📚 Python Topics")
 
@@ -218,7 +231,7 @@ with st.sidebar:
 
 
 # ============================================================
-# Step 6 : Display Welcome Message
+# Step 7 : Display Welcome Message
 # ============================================================
 
 if len(st.session_state.messages) == 1:
@@ -230,7 +243,7 @@ if len(st.session_state.messages) == 1:
 
 
 # ============================================================
-# Step 7 : Display Chat History
+# Step 8 : Display Chat History
 # ============================================================
 
 for message in st.session_state.messages:
@@ -243,7 +256,7 @@ for message in st.session_state.messages:
 
 
 # ============================================================
-# Step 8 : Accept User Question
+# Step 9 : Accept User Question
 # ============================================================
 
 Question = st.chat_input(
@@ -252,7 +265,7 @@ Question = st.chat_input(
 
 
 # ============================================================
-# Step 9 : Generate AI Response
+# Step 10 : Generate AI Response using Groq
 # ============================================================
 
 if Question:
@@ -276,12 +289,17 @@ if Question:
                 "🤖 Yash Python Tutor is thinking..."
             ):
 
-                response = chat(
-                    model="llama3.2:1b",
-                    messages=st.session_state.messages
+                response = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=st.session_state.messages,
+                    temperature=0.5,
+                    max_tokens=2048
                 )
 
-                answer = response.message.content
+                answer = response.choices[0].message.content
+
+                if not answer:
+                    answer = "No response received from AI."
 
             st.markdown(answer)
 
@@ -294,10 +312,8 @@ if Question:
     except Exception as error:
 
         st.error(
-            "Could not get an Ollama response. "
-            "Check whether Ollama is running and "
-            "llama3.2:1b is available."
+            "Could not get a Groq AI response. "
+            "Please check your API configuration."
         )
 
-        st.caption(f"Error details: {error}")
-
+        st.caption(f"Error type: {type(error).__name__}")
